@@ -32,8 +32,16 @@
 	<button id="nextev">&gt;</button>
 	<span id="timedisplay"></span>
 </div>
-<textarea id="graphsrc" rows="20" cols="20"></textarea>
-<textarea id="namessrc" rows="20" cols="20"></textarea>
+<table>
+	<tr>
+		<td><code>rake events:dump</code></td>
+		<td><code>rake events:names</code></td>
+	</tr>
+	<tr>
+		<td><textarea id="graphsrc" rows="10" cols="20"></textarea></td>
+		<td><textarea id="namessrc" rows="10" cols="20"></textarea></td>
+	</tr>
+</table>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.16/d3.js"></script>
 <script src="script.js"></script>
