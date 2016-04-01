@@ -344,6 +344,7 @@ function updateState() {
 function updateNames() {
     // Clear in case of failure
     gNames = { };
+    localStorage.names = namessrc.value;
 
     json = JSON.parse(namessrc.value)
     names = { }
@@ -357,7 +358,6 @@ function updateNames() {
         names["group" + id] = json["groups"][id]
     }
     gNames = names;
-    localStorage.names = namessrc.value;
 }
 
 function userPrevEvent() {
