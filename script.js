@@ -136,17 +136,6 @@ function updateGraph() {
                 });
     });
 
-    // Restart the force layout.
-    /*
-    d3force
-            .gravity(.01)
-            .charge(-80000)
-            .friction(0)
-            .linkDistance( function(d) { return d.value * 10 } )
-            .size([w, h])
-            .start();
-*/
-
     d3force
         .size([w, h])
         .linkStrength(0.1)
@@ -163,10 +152,6 @@ function updateGraph() {
             gnode.parentNode.appendChild(gnode);
         });
 }
-
-// d3nodes.push({ id: "A", type: "group", active: 1455122990000 });
-// d3nodes.push({ id: "B", type: "video", active: 1455126558000 });
-// d3links.push({ source: d3nodes[0], target: d3nodes[1], value: 10 });
 
 updateGraph();
 
@@ -206,21 +191,6 @@ function parseEvents() {
     gEnd = end;
 }
 
-function findNode(id) {
-    for (var i = 0; i < d3nodes.length; i++) {
-        if (d3nodes[i].id == id)
-            return d3nodes[i];
-    }
-    return null;
-}
-
-function findLink(src, dst) {
-    for (var i = 0; i < d3links.length; i++) {
-        if (d3links[i].source == src && d3nodes[i].target == dst)
-            return d3links[i];
-    }
-    return null;
-}
 
 var updateId = 0;
 
@@ -370,219 +340,11 @@ function updateState() {
     }
 }
 
-function OLDupdateState() {
-
-    updateId++;
-
-    var users = { };
-    var videos = { };
-    var groups = { };
-    var views = { };
-    var shares = { };
-    var uploads = { };
-    var joins = { };
-
-    for (var i = 0; i < gEvents.length; i++) {
-        var ev = gEvents[i];
-        if (ev.time > gTime)
-            break;
-
-        if (!processEvent[ev.type])
-            continue;
-
-        if (ev.type == "view_video") {
-            users[ev.user] = ev.time;
-            videos[ev.target] = ev.time;
-            views[ev.user + 'view_video' + ev.target] = {
-                user: ev.user,
-                video: ev.target,
-                time: ev.time
-            };
-        } else if (ev.type == "upload_video") {
-            users[ev.user] = ev.time;
-            videos[ev.target] = ev.time;
-            uploads[ev.user + 'upload_video' + ev.target] = {
-                user: ev.user,
-                video: ev.target,
-                time: ev.time
-            };
-        } else if (ev.type == "share_video") {
-            users[ev.user] = ev.time;
-            videos[ev.target] = ev.time;
-            groups[ev.extra] = ev.time;
-
-            var id = ev.target + 'share_video' + ev.extra;
-
-            if (ev.state) {
-                shares[id] = {
-                    user: ev.user,
-                    video: ev.target,
-                    group: ev.extra,
-                    time: ev.time,
-                };
-            } else {
-                delete shares[id];
-            }
-        } else if (ev.type == "join_group") {
-            users[ev.user] = ev.time;
-            groups[ev.target] = ev.time;
-            joins[ev.user + 'join_group' + ev.target] = {
-                user: ev.user,
-                group: ev.target,
-                time: ev.time
-            };
-        } else if (ev.type == "leave_group") {
-            delete joins[ev.user + 'join_group' + ev.target];
-        }
-    }
-
-    for (var user in users) {
-        var node = findNode('u' + user);
-        if (node) {
-            node.active = users[user];
-            node.update = updateId;
-        } else {
-            node = {
-                id: 'u' + user,
-                type: 'user',
-                active: users[user],
-                update: updateId,
-                x: Math.random() * w,
-                y: Math.random() * h,
-            };
-            d3nodes.push(node);
-        }
-    }
-
-    for (var video in videos) {
-        var node = findNode('v' + video);
-        if (node) {
-            node.active = videos[video];
-            node.update = updateId;
-        } else {
-            node = {
-                id: 'v' + video,
-                type: 'video',
-                active: videos[video],
-                update: updateId,
-                x: Math.random() * w,
-                y: Math.random() * h,
-            };
-            d3nodes.push(node);
-        }
-    }
-
-    for (var group in groups) {
-        var node = findNode('g' + group);
-        if (node) {
-            node.active = groups[group];
-            node.update = updateId;
-        } else {
-            node = {
-                id: 'g' + group,
-                type: 'group',
-                active: groups[group],
-                update: updateId,
-                x: Math.random() * w,
-                y: Math.random() * h,
-            };
-            d3nodes.push(node);
-        }
-    }
-
-    for (var viewId in views) {
-        var view = views[viewId];
-        var link = findLink('u' + view.user, 'v' + view.video);
-        if (link) {
-            link.active = view.time;
-            link.update = updateId;
-        } else {
-            link = {
-                source: findNode('u' + view.user),
-                target: findNode('v' + view.video),
-                type: 'view',
-                active: view.time,
-                update: updateId,
-                value: 10,
-            };
-            d3links.push(link);
-        }
-    }
-
-    for (var uploadId in uploads) {
-        var upload = uploads[uploadId];
-        var link = findLink('u' + upload.user, 'v' + upload.video);
-        if (link) {
-            link.active = upload.time;
-            link.update = updateId;
-        } else {
-            link = {
-                source: findNode('u' + upload.user),
-                target: findNode('v' + upload.video),
-                type: 'upload',
-                active: upload.time,
-                update: updateId,
-                value: 10,
-            };
-            d3links.push(link);
-        }
-    }
-
-    for (var shareId in shares) {
-        var share = shares[shareId];
-        var link = findLink('g' + share.group, 'v' + share.video);
-        if (link) {
-            link.active = share.time;
-            link.update = updateId;
-        } else {
-            link = {
-                source: findNode('g' + share.group),
-                target: findNode('v' + share.video),
-                type: 'share',
-                active: share.time,
-                update: updateId,
-                value: 10,
-            };
-            d3links.push(link);
-        }
-    }
-
-    for (var joinId in joins) {
-        var join = joins[joinId];
-        var link = findLink('g' + join.group, 'u' + join.user);
-        if (link) {
-            link.active = join.time;
-            link.update = updateId;
-        } else {
-            link = {
-                source: findNode('g' + join.group),
-                target: findNode('u' + join.user),
-                type: 'join',
-                active: join.time,
-                update: updateId,
-                value: 10,
-            };
-            d3links.push(link);
-        }
-    }
-
-    for (var i = 0; i < d3nodes.length;) {
-        if (d3nodes[i].update != updateId) {
-            d3nodes.splice(i, 1);
-        } else {
-            i++;
-        }
-    }
-    for (var i = 0; i < d3links.length;) {
-        if (d3links[i].update != updateId) {
-            d3links.splice(i, 1);
-        } else {
-            i++;
-        }
-    }
-}
 
 function updateNames() {
+    // Clear in case of failure
+    gNames = { };
+
     json = JSON.parse(namessrc.value)
     names = { }
     for (var id in json["users"]) {
